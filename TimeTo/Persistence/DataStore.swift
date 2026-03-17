@@ -9,7 +9,7 @@ struct AppData: Codable {
     static let empty = AppData(goals: [], intervals: [], tasks: [])
 }
 
-final class DataStore {
+final class DataStore: Sendable {
     static let shared = DataStore()
 
     let fileURL: URL

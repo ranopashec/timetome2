@@ -181,7 +181,7 @@ final class AppStore {
     private func startTicker() {
         stopTicker()
         ticker = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in self?.tick() }
+            MainActor.assumeIsolated { self?.tick() }
         }
     }
 
