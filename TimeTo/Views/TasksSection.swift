@@ -2,12 +2,12 @@ import SwiftUI
 
 struct TasksSection: View {
     @Environment(AppStore.self) private var store
-    @Binding var showAddTask: Bool
+    @Binding var panel: Panel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             SectionHeader(title: "TASKS") {
-                showAddTask = true
+                panel = .addTask
             }
 
             if store.activeTasks.isEmpty {

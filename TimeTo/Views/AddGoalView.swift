@@ -2,13 +2,12 @@ import SwiftUI
 
 struct AddGoalView: View {
     @Environment(AppStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
+    @Binding var panel: Panel
 
     @State private var name = ""
     @State private var emoji = "⭐"
     @State private var color = GoalColor.accent
     @State private var defaultTimer = 1800
-    @State private var presets: [Int] = [900, 1800, 3600]
 
     private let colorOptions: [(String, GoalColor)] = [
         ("Blue",   .accent),
@@ -31,7 +30,6 @@ struct AddGoalView: View {
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .center)
 
-            // Emoji + Name
             HStack(spacing: 8) {
                 TextField("", text: $emoji)
                     .frame(width: 40)
@@ -42,7 +40,6 @@ struct AddGoalView: View {
                     .textFieldStyle(.roundedBorder)
             }
 
-            // Color
             HStack(spacing: 8) {
                 Text("Color")
                     .font(.callout)
@@ -59,7 +56,6 @@ struct AddGoalView: View {
                 }
             }
 
-            // Default timer
             Picker("Default timer", selection: $defaultTimer) {
                 ForEach(timerOptions, id: \.1) { label, val in
                     Text(label).tag(val)
@@ -67,7 +63,7 @@ struct AddGoalView: View {
             }
 
             HStack {
-                Button("Cancel") { dismiss() }
+                Button("Cancel") { panel = .main }
                     .keyboardShortcut(.escape)
                 Spacer()
                 Button("Add Goal") {
@@ -82,7 +78,7 @@ struct AddGoalView: View {
                         createdAt: Int64(Date().timeIntervalSince1970)
                     )
                     store.addGoal(goal)
-                    dismiss()
+                    panel = .main
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(name.isEmpty)
@@ -90,6 +86,6 @@ struct AddGoalView: View {
             }
         }
         .padding(20)
-        .frame(width: 320)
+        .frame(width: 340)
     }
 }

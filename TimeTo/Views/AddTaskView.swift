@@ -2,7 +2,7 @@ import SwiftUI
 
 struct AddTaskView: View {
     @Environment(AppStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
+    @Binding var panel: Panel
 
     @State private var text = ""
     @State private var selectedGoalId: Int64? = nil
@@ -21,7 +21,6 @@ struct AddTaskView: View {
                 .textFieldStyle(.roundedBorder)
                 .lineLimit(3)
 
-            // Goal picker — REQUIRED
             if selectableGoals.isEmpty {
                 HStack {
                     Image(systemName: "exclamationmark.triangle")
@@ -52,7 +51,7 @@ struct AddTaskView: View {
             }
 
             HStack {
-                Button("Cancel") { dismiss() }
+                Button("Cancel") { panel = .main }
                     .keyboardShortcut(.escape)
                 Spacer()
                 Button("Add Task") {
@@ -64,7 +63,7 @@ struct AddTaskView: View {
                         isCompleted: false
                     )
                     store.addTask(task)
-                    dismiss()
+                    panel = .main
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(text.isEmpty || selectedGoalId == nil)
@@ -72,6 +71,6 @@ struct AddTaskView: View {
             }
         }
         .padding(20)
-        .frame(width: 320)
+        .frame(width: 340)
     }
 }

@@ -2,7 +2,7 @@ import SwiftUI
 
 struct GoalsSection: View {
     @Environment(AppStore.self) private var store
-    @Binding var showAddGoal: Bool
+    @Binding var panel: Panel
 
     private var goals: [Goal] {
         store.goals.filter { $0.id != Goal.noGoal.id && !$0.isArchived }
@@ -11,7 +11,7 @@ struct GoalsSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             SectionHeader(title: "GOALS") {
-                showAddGoal = true
+                panel = .addGoal
             }
 
             if goals.isEmpty {
