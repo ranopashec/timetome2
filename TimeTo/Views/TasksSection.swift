@@ -54,9 +54,10 @@ struct TaskRow: View {
                     .lineLimit(2)
 
                 if let goal {
-                    HStack(spacing: 3) {
-                        Text(goal.emoji)
-                            .font(.caption2)
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(goal.color.color)
+                            .frame(width: 6, height: 6)
                         Text(goal.name)
                             .font(.caption2)
                             .foregroundStyle(goal.color.color)

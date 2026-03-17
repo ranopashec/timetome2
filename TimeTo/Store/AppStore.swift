@@ -15,18 +15,15 @@ final class AppStore {
 
     var activeGoalId: Int64?
     var activeTaskId: Int64?
+    var timerStartDate: Date?
     var timerTargetSeconds: Int = 0
 
-    private var originalStartDate: Date?       // when the timer was first started (survives pauses)
-    private var timerStartDate: Date?          // when the current running segment began
-    private var accumulatedSeconds: TimeInterval = 0  // seconds from previous paused segments
-
-    private(set) var currentElapsed: TimeInterval = 0
+    /// Incremented every second to drive UI refresh (remainingSeconds is computed from Date()).
+    private(set) var tick: Int = 0
     private var ticker: Timer?
+    private let dataStore = DataStore.shared
 
     // MARK: - Init
-
-    private let dataStore = DataStore.shared
 
     init() {
         let data = dataStore.load()
@@ -41,19 +38,20 @@ final class AppStore {
 
     // MARK: - Computed
 
-    var isTimerRunning: Bool { timerStartDate != nil }
-    var isTimerPaused:  Bool { timerStartDate == nil && accumulatedSeconds > 0 && activeGoalId != nil }
-    var isTimerActive:  Bool { activeGoalId != nil }
+    var isTimerActive: Bool { activeGoalId != nil }
 
     var activeGoal: Goal? { goals.first { $0.id == activeGoalId } }
     var activeTask: Task? { tasks.first { $0.id == activeTaskId } }
 
-    var elapsedSeconds: Int { Int(currentElapsed) }
+    /// Seconds remaining in the countdown. Negative = overtime.
+    var remainingSeconds: Int {
+        guard let start = timerStartDate else { return 0 }
+        let _ = tick // depend on tick so SwiftUI re-evaluates every second
+        return timerTargetSeconds - Int(Date().timeIntervalSince(start))
+    }
 
-    var elapsedLabel: String { formatTime(elapsedSeconds) }
-
-    var activeTasks: [Task]     { tasks.filter { !$0.isCompleted } }
-    var completedTasks: [Task]  { tasks.filter { $0.isCompleted } }
+    var activeTasks: [Task]    { tasks.filter { !$0.isCompleted } }
+    var completedTasks: [Task] { tasks.filter { $0.isCompleted } }
 
     func tasks(for goalId: Int64) -> [Task] {
         activeTasks.filter { $0.goalId == goalId }
@@ -61,59 +59,16 @@ final class AppStore {
 
     // MARK: - Timer control
 
+    /// Start a new segment. Automatically logs the current segment first.
     func startTimer(goalId: Int64, taskId: Int64? = nil, duration: Int) {
-        stopTimer(save: true)
+        logCurrentSegment()
         let now = Date()
-        activeGoalId          = goalId
-        activeTaskId          = taskId
-        timerTargetSeconds    = duration
-        accumulatedSeconds    = 0
-        originalStartDate     = now
-        timerStartDate        = now
-        currentElapsed        = 0
+        activeGoalId       = goalId
+        activeTaskId       = taskId
+        timerStartDate     = now
+        timerTargetSeconds = duration
         startTicker()
-    }
-
-    func pauseTimer() {
-        guard isTimerRunning, let start = timerStartDate else { return }
-        accumulatedSeconds += Date().timeIntervalSince(start)
-        currentElapsed = accumulatedSeconds
-        timerStartDate = nil
-        stopTicker()
-    }
-
-    func resumeTimer() {
-        guard isTimerPaused else { return }
-        timerStartDate = Date()
-        startTicker()
-    }
-
-    func stopTimer(save: Bool = false) {
-        guard isTimerActive else { return }
-
-        if save {
-            let totalElapsed: Int
-            if let start = timerStartDate {
-                totalElapsed = Int(accumulatedSeconds + Date().timeIntervalSince(start))
-            } else {
-                totalElapsed = Int(accumulatedSeconds)
-            }
-
-            if totalElapsed > 0, let goalId = activeGoalId {
-                let startTimestamp = Int64((originalStartDate ?? Date()).timeIntervalSince1970)
-                let interval = Interval(
-                    id: startTimestamp,
-                    duration: totalElapsed,
-                    note: activeTask?.text,
-                    goalId: goalId,
-                    timerDuration: timerTargetSeconds
-                )
-                intervals.insert(interval, at: 0)
-                persist()
-            }
-        }
-
-        clearTimer()
+        persist()
     }
 
     func extendTimer(by seconds: Int) {
@@ -127,14 +82,7 @@ final class AppStore {
         persist()
     }
 
-    func updateGoal(_ goal: Goal) {
-        guard let idx = goals.firstIndex(where: { $0.id == goal.id }) else { return }
-        goals[idx] = goal
-        persist()
-    }
-
     func deleteGoal(id: Int64) {
-        // Don't delete the "no goal" sentinel
         guard id != Goal.noGoal.id else { return }
         goals.removeAll { $0.id == id }
         persist()
@@ -167,32 +115,22 @@ final class AppStore {
 
     // MARK: - Private helpers
 
-    private func clearTimer() {
-        stopTicker()
-        activeGoalId       = nil
-        activeTaskId       = nil
-        originalStartDate  = nil
-        timerStartDate     = nil
-        accumulatedSeconds = 0
-        currentElapsed     = 0
-        timerTargetSeconds = 0
+    private func logCurrentSegment() {
+        guard let goalId = activeGoalId, let start = timerStartDate else { return }
+        let interval = Interval(id: Int64(start.timeIntervalSince1970), goalId: goalId)
+        intervals.insert(interval, at: 0)
     }
 
     private func startTicker() {
         stopTicker()
         ticker = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.tick() }
+            MainActor.assumeIsolated { self?.tick += 1 }
         }
     }
 
     private func stopTicker() {
         ticker?.invalidate()
         ticker = nil
-    }
-
-    private func tick() {
-        guard let start = timerStartDate else { return }
-        currentElapsed = accumulatedSeconds + Date().timeIntervalSince(start)
     }
 
     private func persist() {
@@ -203,11 +141,13 @@ final class AppStore {
 // MARK: - Formatting
 
 func formatTime(_ totalSeconds: Int) -> String {
-    let h = totalSeconds / 3600
-    let m = (totalSeconds % 3600) / 60
-    let s = totalSeconds % 60
-    if h > 0 { return String(format: "%d:%02d:%02d", h, m, s) }
-    return String(format: "%d:%02d", m, s)
+    let abs = Swift.abs(totalSeconds)
+    let h = abs / 3600
+    let m = (abs % 3600) / 60
+    let s = abs % 60
+    let sign = totalSeconds < 0 ? "+" : ""
+    if h > 0 { return "\(sign)\(h):\(String(format: "%02d", m)):\(String(format: "%02d", s))" }
+    return "\(sign)\(m):\(String(format: "%02d", s))"
 }
 
 func formatPreset(_ seconds: Int) -> String {

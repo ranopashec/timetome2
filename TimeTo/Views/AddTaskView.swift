@@ -41,8 +41,7 @@ struct AddTaskView: View {
                     Picker("", selection: $selectedGoalId) {
                         Text("Select a goal…").tag(Int64?.none)
                         ForEach(selectableGoals) { goal in
-                            Label(goal.name, systemImage: "")
-                                .tag(Int64?.some(goal.id))
+                            Text(goal.name).tag(Int64?.some(goal.id))
                         }
                     }
                     .pickerStyle(.menu)

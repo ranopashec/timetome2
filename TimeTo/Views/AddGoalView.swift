@@ -5,7 +5,6 @@ struct AddGoalView: View {
     @Binding var panel: Panel
 
     @State private var name = ""
-    @State private var emoji = "⭐"
     @State private var color = GoalColor.accent
     @State private var defaultTimer = 1800
 
@@ -30,15 +29,8 @@ struct AddGoalView: View {
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .center)
 
-            HStack(spacing: 8) {
-                TextField("", text: $emoji)
-                    .frame(width: 40)
-                    .multilineTextAlignment(.center)
-                    .textFieldStyle(.roundedBorder)
-
-                TextField("Goal name", text: $name)
-                    .textFieldStyle(.roundedBorder)
-            }
+            TextField("Goal name", text: $name)
+                .textFieldStyle(.roundedBorder)
 
             HStack(spacing: 8) {
                 Text("Color")
@@ -50,7 +42,7 @@ struct AddGoalView: View {
                         .fill(c.color)
                         .frame(width: 20, height: 20)
                         .overlay(
-                            Circle().stroke(Color.primary.opacity(0.3), lineWidth: color == c ? 2 : 0)
+                            Circle().stroke(Color.primary.opacity(0.4), lineWidth: color == c ? 2 : 0)
                         )
                         .onTapGesture { color = c }
                 }
@@ -71,7 +63,6 @@ struct AddGoalView: View {
                     let goal = Goal(
                         id: Int64(Date().timeIntervalSince1970),
                         name: name,
-                        emoji: String(emoji.prefix(2)),
                         color: color,
                         defaultTimer: defaultTimer,
                         timerPresets: [900, 1800, 3600],

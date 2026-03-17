@@ -36,41 +36,44 @@ struct GoalRow: View {
     private var taskCount: Int { store.tasks(for: goal.id).count }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 6) {
-                Text(goal.emoji)
-                    .font(.title3)
+        HStack(spacing: 8) {
+            Circle()
+                .fill(goal.color.color)
+                .frame(width: 8, height: 8)
 
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(goal.name)
-                        .font(.callout)
-                        .fontWeight(isActive ? .semibold : .regular)
-                        .foregroundStyle(isActive ? goal.color.color : .primary)
-                    if taskCount > 0 {
-                        Text("\(taskCount) task\(taskCount == 1 ? "" : "s")")
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
-                    }
-                }
-
-                Spacer()
-
-                // Quick-start preset buttons (show up to 4)
-                HStack(spacing: 4) {
-                    ForEach(goal.timerPresets.prefix(4), id: \.self) { preset in
-                        Button(formatPreset(preset)) {
-                            store.startTimer(goalId: goal.id, duration: preset)
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.mini)
-                        .tint(goal.color.color)
-                    }
+            VStack(alignment: .leading, spacing: 1) {
+                Text(goal.name)
+                    .font(.callout)
+                    .fontWeight(isActive ? .semibold : .regular)
+                    .foregroundStyle(isActive ? goal.color.color : .primary)
+                if taskCount > 0 {
+                    Text("\(taskCount) task\(taskCount == 1 ? "" : "s")")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
                 }
             }
-            .padding(.vertical, 5)
-            .padding(.horizontal, 8)
-            .background(isActive ? goal.color.color.opacity(0.12) : Color.clear)
-            .cornerRadius(8)
+
+            Spacer()
+
+            HStack(spacing: 4) {
+                ForEach(goal.timerPresets.prefix(4), id: \.self) { preset in
+                    Button(formatPreset(preset)) {
+                        store.startTimer(goalId: goal.id, duration: preset)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.mini)
+                    .tint(goal.color.color)
+                }
+            }
+        }
+        .padding(.vertical, 5)
+        .padding(.horizontal, 8)
+        .background(isActive ? goal.color.color.opacity(0.12) : Color.clear)
+        .cornerRadius(8)
+        .contextMenu {
+            Button("Delete", role: .destructive) {
+                store.deleteGoal(id: goal.id)
+            }
         }
     }
 }
