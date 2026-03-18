@@ -2,8 +2,10 @@ import SwiftUI
 
 struct ActiveTimerView: View {
     @Environment(AppStore.self) private var store
+    @State private var showElapsed = false
 
     private var remaining: Int { store.remainingSeconds }
+    private var elapsed: Int   { store.elapsedSeconds }
     private var isOvertime: Bool { remaining < 0 }
     private var goal: Goal? { store.activeGoal }
     private var isNoGoal: Bool { store.activeGoalId == Goal.noGoal.id }
@@ -15,27 +17,45 @@ struct ActiveTimerView: View {
                 .frame(width: 8, height: 8)
 
             Text(isNoGoal ? "No goal" : (goal?.name ?? ""))
-                .font(.callout)
+                .font(.body)
                 .foregroundStyle(goal?.color.color ?? .secondary)
                 .lineLimit(1)
 
             Spacer()
 
-            // Tap to log current segment and start 10-min no-goal break
+            // ⓘ toggles between countdown and elapsed
+            Button {
+                showElapsed.toggle()
+            } label: {
+                Image(systemName: "info.circle")
+                    .font(.caption)
+                    .foregroundStyle(showElapsed ? Color.accentColor : Color.secondary)
+            }
+            .buttonStyle(.plain)
+            .help(showElapsed ? "Showing time invested — tap to show countdown" : "Tap to show time invested in this goal")
+
+            // Tap to log break (10 min no-goal)
             Button {
                 store.startTimer(goalId: Goal.noGoal.id, duration: 10 * 60)
             } label: {
-                Text(formatTime(Swift.abs(remaining)))
-                    .font(.system(.body, design: .monospaced, weight: .semibold))
-                    .foregroundStyle(isOvertime ? Color.orange : Color.primary)
-                    .contentShape(Rectangle())
+                Group {
+                    if showElapsed {
+                        Text(formatTime(elapsed))
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text(formatTime(Swift.abs(remaining)))
+                            .foregroundStyle(isOvertime ? Color.orange : Color.primary)
+                    }
+                }
+                .font(.system(.title3, design: .monospaced, weight: .semibold))
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .help("Tap to log break (10 min, no goal)")
 
             Button("+10") { store.extendTimer(by: 10 * 60) }
                 .buttonStyle(.bordered)
-                .controlSize(.mini)
+                .controlSize(.small)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)

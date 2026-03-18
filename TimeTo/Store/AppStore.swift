@@ -14,11 +14,10 @@ final class AppStore {
     // MARK: - Active timer state
 
     var activeGoalId: Int64?
-    var activeTaskId: Int64?
     var timerStartDate: Date?
     var timerTargetSeconds: Int = 0
 
-    /// Incremented every second to drive UI refresh (remainingSeconds is computed from Date()).
+    /// Incremented every second to drive UI refresh.
     private(set) var tick: Int = 0
     private var ticker: Timer?
     private let dataStore = DataStore.shared
@@ -39,19 +38,23 @@ final class AppStore {
     // MARK: - Computed
 
     var isTimerActive: Bool { activeGoalId != nil }
-
     var activeGoal: Goal? { goals.first { $0.id == activeGoalId } }
-    var activeTask: Task? { tasks.first { $0.id == activeTaskId } }
 
     /// Seconds remaining in the countdown. Negative = overtime.
     var remainingSeconds: Int {
         guard let start = timerStartDate else { return 0 }
-        let _ = tick // depend on tick so SwiftUI re-evaluates every second
+        let _ = tick
         return timerTargetSeconds - Int(Date().timeIntervalSince(start))
     }
 
-    var activeTasks: [Task]    { tasks.filter { !$0.isCompleted } }
-    var completedTasks: [Task] { tasks.filter { $0.isCompleted } }
+    /// Total seconds elapsed since current segment started.
+    var elapsedSeconds: Int {
+        guard let start = timerStartDate else { return 0 }
+        let _ = tick
+        return Int(Date().timeIntervalSince(start))
+    }
+
+    var activeTasks: [Task] { tasks.filter { !$0.isCompleted } }
 
     func tasks(for goalId: Int64) -> [Task] {
         activeTasks.filter { $0.goalId == goalId }
@@ -59,13 +62,10 @@ final class AppStore {
 
     // MARK: - Timer control
 
-    /// Start a new segment. Automatically logs the current segment first.
-    func startTimer(goalId: Int64, taskId: Int64? = nil, duration: Int) {
+    func startTimer(goalId: Int64, duration: Int) {
         logCurrentSegment()
-        let now = Date()
         activeGoalId       = goalId
-        activeTaskId       = taskId
-        timerStartDate     = now
+        timerStartDate     = Date()
         timerTargetSeconds = duration
         startTicker()
         persist()
@@ -95,16 +95,9 @@ final class AppStore {
         persist()
     }
 
+    /// Completing a task deletes it immediately — no completed list.
     func completeTask(id: Int64) {
-        guard let idx = tasks.firstIndex(where: { $0.id == id }) else { return }
-        let t = tasks[idx]
-        tasks[idx] = Task(
-            id: t.id,
-            text: t.text,
-            goalId: t.goalId,
-            isCompleted: !t.isCompleted,
-            completedAt: t.isCompleted ? nil : Int64(Date().timeIntervalSince1970)
-        )
+        tasks.removeAll { $0.id == id }
         persist()
     }
 
@@ -117,8 +110,7 @@ final class AppStore {
 
     private func logCurrentSegment() {
         guard let goalId = activeGoalId, let start = timerStartDate else { return }
-        let interval = Interval(id: Int64(start.timeIntervalSince1970), goalId: goalId)
-        intervals.insert(interval, at: 0)
+        intervals.insert(Interval(id: Int64(start.timeIntervalSince1970), goalId: goalId), at: 0)
     }
 
     private func startTicker() {

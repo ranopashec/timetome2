@@ -43,12 +43,12 @@ struct GoalRow: View {
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(goal.name)
-                    .font(.callout)
+                    .font(.body)
                     .fontWeight(isActive ? .semibold : .regular)
                     .foregroundStyle(isActive ? goal.color.color : .primary)
                 if taskCount > 0 {
                     Text("\(taskCount) task\(taskCount == 1 ? "" : "s")")
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundStyle(.tertiary)
                 }
             }
@@ -61,7 +61,7 @@ struct GoalRow: View {
                         store.startTimer(goalId: goal.id, duration: preset)
                     }
                     .buttonStyle(.bordered)
-                    .controlSize(.mini)
+                    .controlSize(.small)
                     .tint(goal.color.color)
                 }
             }

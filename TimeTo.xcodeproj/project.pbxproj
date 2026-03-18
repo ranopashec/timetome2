@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		268F28B6AFB8ABA5B7183AB4 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1615E0193AB74F81CC3C5956 /* StatsView.swift */; };
 		2AB816ADBAC39B439ACA36D1 /* SectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 700F253ED09D3C84F91F8670 /* SectionHeader.swift */; };
 		383E050D9E0B4FC79E26D6F1 /* AddTaskView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F49FE38BAA6F15D9BA5201C6 /* AddTaskView.swift */; };
 		492045B6C4EBBF6D25DA64CD /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6181A3AF5A0793D3F64DFEDE /* AppStore.swift */; };
@@ -25,6 +26,7 @@
 /* Begin PBXFileReference section */
 		032A533F3479FBC9C9BAEADF /* TimeTo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TimeTo.entitlements; sourceTree = "<group>"; };
 		0519FE0654D422E8690CFF91 /* TimeTo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeTo.swift; sourceTree = "<group>"; };
+		1615E0193AB74F81CC3C5956 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
 		186FB6527366A8949D51E7E4 /* GoalsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsSection.swift; sourceTree = "<group>"; };
 		18AF876021D378BABB1ED1F6 /* MenuBarContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarContent.swift; sourceTree = "<group>"; };
 		5B0D24700387FB5132D16DA4 /* TimeTo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TimeTo.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -107,6 +109,7 @@
 				186FB6527366A8949D51E7E4 /* GoalsSection.swift */,
 				18AF876021D378BABB1ED1F6 /* MenuBarContent.swift */,
 				700F253ED09D3C84F91F8670 /* SectionHeader.swift */,
+				1615E0193AB74F81CC3C5956 /* StatsView.swift */,
 				B9D51F0A0A2DB07446744BD2 /* TasksSection.swift */,
 			);
 			path = Views;
@@ -140,6 +143,11 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					5FC269565FBDD9730EECABA4 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
 			};
 			buildConfigurationList = 4798E7DB04A757554587FC5D /* Build configuration list for PBXProject "TimeTo" */;
 			developmentRegion = en;
@@ -175,6 +183,7 @@
 				5FB937455845B4B371357765 /* Interval.swift in Sources */,
 				71DD4E3511541992EDF279D8 /* MenuBarContent.swift in Sources */,
 				2AB816ADBAC39B439ACA36D1 /* SectionHeader.swift in Sources */,
+				268F28B6AFB8ABA5B7183AB4 /* StatsView.swift in Sources */,
 				BD2BA9ADECC4A81B9D93ED3E /* Task.swift in Sources */,
 				59CEB1675BA6F8DDDAB4FBF3 /* TasksSection.swift in Sources */,
 				71AFBABD6A621BA6973A4D4D /* TimeTo.swift in Sources */,
@@ -189,12 +198,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = TimeTo/TimeTo.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
-				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=macosx*]" = BF8CM228NC;
 				INFOPLIST_FILE = TimeTo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -202,7 +206,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.architect.timetome;
 				PRODUCT_NAME = TimeTo;
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -272,12 +275,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = TimeTo/TimeTo.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
-				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=macosx*]" = BF8CM228NC;
 				INFOPLIST_FILE = TimeTo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -285,7 +283,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.architect.timetome;
 				PRODUCT_NAME = TimeTo;
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
 			};
 			name = Debug;
