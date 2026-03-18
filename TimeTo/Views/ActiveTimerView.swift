@@ -44,7 +44,7 @@ struct ActiveTimerView: View {
                             .foregroundStyle(.secondary)
                     } else {
                         Text(formatTime(Swift.abs(remaining)))
-                            .foregroundStyle(isOvertime ? Color.orange : Color.primary)
+                            .foregroundStyle(isOvertime ? Color.red : Color.primary)
                     }
                 }
                 .font(.system(.title3, design: .monospaced, weight: .semibold))

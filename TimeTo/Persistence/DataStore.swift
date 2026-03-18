@@ -5,6 +5,10 @@ struct AppData: Codable {
     var goals: [Goal]
     var intervals: [Interval]
     var tasks: [Task]
+    // Active timer — optional so old saves decode cleanly
+    var activeGoalId: Int64? = nil
+    var timerStartDate: Date? = nil
+    var timerTargetSeconds: Int = 0
 
     static let empty = AppData(goals: [], intervals: [], tasks: [])
 }

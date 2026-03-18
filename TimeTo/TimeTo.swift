@@ -16,7 +16,7 @@ struct TimeTomeApp: App {
                     Text(formatTime(Swift.abs(store.remainingSeconds)))
                         .monospacedDigit()
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(store.remainingSeconds < 0 ? Color.orange : Color.primary)
+                        .foregroundStyle(store.remainingSeconds < 0 ? Color.red : Color.primary)
                 }
             }
         }

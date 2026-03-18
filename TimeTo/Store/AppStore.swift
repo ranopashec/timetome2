@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import AppKit
 
 @MainActor
 @Observable
@@ -20,6 +21,7 @@ final class AppStore {
     /// Incremented every second to drive UI refresh.
     private(set) var tick: Int = 0
     private var ticker: Timer?
+    private var overtimeSoundPlayed = false
     private let dataStore = DataStore.shared
 
     // MARK: - Init
@@ -32,6 +34,23 @@ final class AppStore {
 
         if goals.isEmpty {
             goals = [.noGoal]
+        }
+
+        if let savedGoalId = data.activeGoalId, let savedStart = data.timerStartDate {
+            // Restore previous session timer
+            activeGoalId       = savedGoalId
+            timerStartDate     = savedStart
+            timerTargetSeconds = data.timerTargetSeconds
+            overtimeSoundPlayed = (data.timerTargetSeconds - Int(Date().timeIntervalSince(savedStart))) < 0
+            startTicker()
+        } else {
+            // No active timer — auto-start no-goal stopwatch
+            activeGoalId       = Goal.noGoal.id
+            timerStartDate     = Date()
+            timerTargetSeconds = 0
+            overtimeSoundPlayed = true // already at 0, suppress sound on launch
+            startTicker()
+            persist()
         }
     }
 
@@ -64,9 +83,10 @@ final class AppStore {
 
     func startTimer(goalId: Int64, duration: Int) {
         logCurrentSegment()
-        activeGoalId       = goalId
-        timerStartDate     = Date()
-        timerTargetSeconds = duration
+        activeGoalId        = goalId
+        timerStartDate      = Date()
+        timerTargetSeconds  = duration
+        overtimeSoundPlayed = (duration == 0) // if starting at 0, suppress immediate sound
         startTicker()
         persist()
     }
@@ -106,6 +126,29 @@ final class AppStore {
         persist()
     }
 
+    // MARK: - Intervals (history editing)
+
+    func addInterval(_ interval: Interval) {
+        intervals.removeAll { $0.id == interval.id }
+        intervals.append(interval)
+        persist()
+    }
+
+    func deleteInterval(id: Int64) {
+        intervals.removeAll { $0.id == id }
+        persist()
+    }
+
+    /// Change start time of an interval (id = timestamp, so we replace).
+    func updateIntervalStart(oldId: Int64, newDate: Date) {
+        guard let existing = intervals.first(where: { $0.id == oldId }) else { return }
+        let newId = Int64(newDate.timeIntervalSince1970)
+        intervals.removeAll { $0.id == oldId }
+        intervals.removeAll { $0.id == newId } // avoid duplicates if new time collides
+        intervals.append(Interval(id: newId, goalId: existing.goalId))
+        persist()
+    }
+
     // MARK: - Private helpers
 
     private func logCurrentSegment() {
@@ -116,7 +159,15 @@ final class AppStore {
     private func startTicker() {
         stopTicker()
         ticker = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.tick += 1 }
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.tick += 1
+                // Play sound exactly when crossing into overtime
+                if !self.overtimeSoundPlayed && self.remainingSeconds <= 0 {
+                    NSSound(named: .init("Tink"))?.play()
+                    self.overtimeSoundPlayed = true
+                }
+            }
         }
     }
 
@@ -126,7 +177,15 @@ final class AppStore {
     }
 
     private func persist() {
-        dataStore.save(AppData(version: 1, goals: goals, intervals: intervals, tasks: tasks))
+        dataStore.save(AppData(
+            version: 1,
+            goals: goals,
+            intervals: intervals,
+            tasks: tasks,
+            activeGoalId: activeGoalId,
+            timerStartDate: timerStartDate,
+            timerTargetSeconds: timerTargetSeconds
+        ))
     }
 }
 
