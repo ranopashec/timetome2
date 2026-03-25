@@ -11,7 +11,7 @@ struct TasksSection: View {
             }
 
             if store.activeTasks.isEmpty {
-                Text("No tasks — tap + to add one (requires a goal)")
+                Text("No tasks — tap + to add one")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .padding(.vertical, 4)

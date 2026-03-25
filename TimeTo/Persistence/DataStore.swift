@@ -28,8 +28,7 @@ final class DataStore: Sendable {
 
     func load() -> AppData {
         guard
-            let data = try? Data(contentsOf: fileURL),
-            let decoded = try? JSONDecoder().decode(AppData.self, from: data)
+            let decoded = try? load(from: fileURL)
         else {
             return .empty
         }
@@ -37,9 +36,18 @@ final class DataStore: Sendable {
     }
 
     func save(_ appData: AppData) {
+        try? save(appData, to: fileURL)
+    }
+
+    func load(from url: URL) throws -> AppData {
+        let data = try Data(contentsOf: url)
+        return try JSONDecoder().decode(AppData.self, from: data)
+    }
+
+    func save(_ appData: AppData, to url: URL) throws {
         let encoder = JSONEncoder()
-        encoder.outputFormatting = .prettyPrinted
-        guard let data = try? encoder.encode(appData) else { return }
-        try? data.write(to: fileURL, options: .atomic)
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let data = try encoder.encode(appData)
+        try data.write(to: url, options: .atomic)
     }
 }

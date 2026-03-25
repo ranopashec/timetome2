@@ -81,7 +81,7 @@ struct StatsView: View {
                                     Circle().fill(stat.goal.color.color).frame(width: 8, height: 8)
                                     Text(stat.goal.name).font(.callout).lineLimit(1)
                                     Spacer()
-                                    Text(stat.percentLabel).font(.callout).foregroundStyle(.secondary)
+                                    Text(stat.summaryLabel).font(.callout).foregroundStyle(.secondary)
                                 }
                             }
                         }
@@ -271,7 +271,7 @@ private struct EditableHistoryRow: View {
                         .datePickerStyle(.stepperField)
 
                     Button("Save") {
-                        store.updateIntervalStart(oldId: item.id, newDate: editDate)
+                        store.updateSegmentStart(oldId: item.id, newDate: editDate)
                         editing = false
                     }
                     .buttonStyle(.borderedProminent)
@@ -363,7 +363,7 @@ struct GoalStat: Identifiable {
     let goal: Goal
     let totalSeconds: Int
     let percentage: Double
-    var percentLabel: String { "\(Int(percentage * 100))%" }
+    var summaryLabel: String { summaryDurationLabel(totalSeconds) }
 }
 
 struct HistoryItem: Identifiable {
@@ -380,4 +380,13 @@ private func durationLabel(_ s: Int) -> String {
     if h > 0 { return "\(h)h \(m)m" }
     if m > 0 { return "\(m)m \(sec)s" }
     return "\(sec)s"
+}
+
+private func summaryDurationLabel(_ s: Int) -> String {
+    let h = s / 3600
+    let m = (s % 3600) / 60
+
+    if h > 0 { return m == 0 ? "\(h)h" : "\(h)h \(m)m" }
+    if m > 0 { return "\(m)m" }
+    return "\(s)s"
 }

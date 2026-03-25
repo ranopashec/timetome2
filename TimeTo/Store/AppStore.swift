@@ -93,6 +93,7 @@ final class AppStore {
 
     func extendTimer(by seconds: Int) {
         timerTargetSeconds += seconds
+        persist()
     }
 
     // MARK: - Goals
@@ -139,14 +140,30 @@ final class AppStore {
         persist()
     }
 
-    /// Change start time of an interval (id = timestamp, so we replace).
-    func updateIntervalStart(oldId: Int64, newDate: Date) {
+    /// Change start time of a saved or currently active interval.
+    func updateSegmentStart(oldId: Int64, newDate: Date) {
+        if let activeStart = timerStartDate, Int64(activeStart.timeIntervalSince1970) == oldId {
+            timerStartDate = newDate
+            overtimeSoundPlayed = (timerTargetSeconds - Int(Date().timeIntervalSince(newDate))) <= 0
+            persist()
+            return
+        }
+
         guard let existing = intervals.first(where: { $0.id == oldId }) else { return }
         let newId = Int64(newDate.timeIntervalSince1970)
         intervals.removeAll { $0.id == oldId }
         intervals.removeAll { $0.id == newId } // avoid duplicates if new time collides
         intervals.append(Interval(id: newId, goalId: existing.goalId))
         persist()
+    }
+
+    func exportBackup(to url: URL) throws {
+        try dataStore.save(snapshot(), to: url)
+    }
+
+    func importBackup(from url: URL) throws {
+        let data = try dataStore.load(from: url)
+        apply(data)
     }
 
     // MARK: - Private helpers
@@ -177,7 +194,11 @@ final class AppStore {
     }
 
     private func persist() {
-        dataStore.save(AppData(
+        dataStore.save(snapshot())
+    }
+
+    private func snapshot() -> AppData {
+        AppData(
             version: 1,
             goals: goals,
             intervals: intervals,
@@ -185,7 +206,37 @@ final class AppStore {
             activeGoalId: activeGoalId,
             timerStartDate: timerStartDate,
             timerTargetSeconds: timerTargetSeconds
-        ))
+        )
+    }
+
+    private func apply(_ data: AppData) {
+        stopTicker()
+
+        var importedGoals = data.goals.filter { $0.id != Goal.noGoal.id }
+        importedGoals.insert(.noGoal, at: 0)
+
+        goals = importedGoals
+        intervals = data.intervals
+        tasks = data.tasks
+
+        let hasActiveGoal = data.activeGoalId.flatMap { goalId in
+            importedGoals.contains { $0.id == goalId } ? goalId : nil
+        }
+
+        if let goalId = hasActiveGoal, let start = data.timerStartDate {
+            activeGoalId = goalId
+            timerStartDate = start
+            timerTargetSeconds = data.timerTargetSeconds
+            overtimeSoundPlayed = (timerTargetSeconds - Int(Date().timeIntervalSince(start))) <= 0
+        } else {
+            activeGoalId = Goal.noGoal.id
+            timerStartDate = Date()
+            timerTargetSeconds = 0
+            overtimeSoundPlayed = true
+        }
+
+        startTicker()
+        persist()
     }
 }
 
